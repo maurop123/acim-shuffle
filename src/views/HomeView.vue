@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { computed } from 'vue'
 import chapters from '../data/chapters.js'
 console.debug('chapters', chapters)
