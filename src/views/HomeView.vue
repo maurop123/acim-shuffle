@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
+import chapters from '../data/chapters.js'
+console.debug('chapters', chapters)
 
 const videos = [
   {
@@ -25,56 +27,34 @@ const videos = [
   }
 ]
 
-const chapters = [
-  {
-    id: 1,
-    link: videos[0].link,
-    start: 1342
-  },
-  {
-    id: 2,
-    link: videos[0].link,
-    start: 4279
-  },
-  {
-    id: 3,
-    link: videos[0].link,
-    start: 8205
-  },
-  {
-    id: 4,
-    link: videos[0].link,
-    start: 11532
-  },
-  {
-    id: 5,
-    link: videos[0].link,
-    start: 15716
-  },
-  {
-    id: 6,
-    link: videos[0].link,
-    start: 19054
-  },
-  {
-    id: 7,
-    link: videos[0].link,
-    start: 22750
-  },
-  {
-    id: 8,
-    link: videos[0].link,
-    start: 27617
-  }
-]
-
-const random_video_index = Math.floor(Math.random() * videos.length)
+const random_video_index = Math.floor(Math.random() * 1) //videos.length)
 const random_video = videos[random_video_index]
 const random_time = Math.floor(Math.random() * random_video.duration)
 
 function getRandomAcimYoutubeLink() {
   return `${random_video.link}?start=${random_time}`
 }
+
+const randomChapter = computed(() => {
+  const randTime = random_time
+  const chosenSection = chapters.reduce((acc, chapter, i, arr) => {
+    const { sections } = chapter
+    const _chosenSection = sections.reduce((add, section, j, ass) => {
+      if (section.start > randTime) return section
+      else return add
+    }, null)
+    if (_chosenSection !== null) {
+      chapter.section = _chosenSection
+      return chapter
+    } else return acc
+    /* console.debug('randTime', randTime, 'time.start', section.start) */
+    /* if (randTime > section.start) return _arr[j + 1] */
+    /* if (randTime < section.start) return _acc */
+    /* }, _arr[0]) */
+  }, null)
+  console.debug('chosenSection', chosenSection)
+  return chosenSection
+})
 
 function randomInteger(topNumber) {
   return Math.floor(Math.random() * topNumber) + 1
@@ -88,6 +68,13 @@ function arrayRandomItem(arr) {
 
 <template>
   <main>
+    <h3>{{ randomChapter.title }}</h3>
+    <h4>Chapter {{ randomChapter.id }}</h4>
+    <h1>
+      Section
+      {{ randomChapter.section.id }}
+    </h1>
+    <h2>{{ randomChapter.section.title }}</h2>
     <iframe
       class="responsive-iframe"
       :src="getRandomAcimYoutubeLink()"
@@ -100,6 +87,28 @@ function arrayRandomItem(arr) {
 <style>
 body {
   background: #170a3d !important;
+  color: #dfa013 !important;
+  font-family: 'Playfair Display' !important;
+}
+
+h1 {
+  font-size: 2rem;
+  align-self: start;
+}
+
+h2 {
+  font-size: 3rem;
+  text-align: center;
+}
+
+h3 {
+  font-size: 1.5rem;
+  align-self: end;
+}
+
+h4 {
+  font-size: 1.2rem;
+  align-self: end;
 }
 
 html,
