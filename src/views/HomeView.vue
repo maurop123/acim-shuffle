@@ -1,60 +1,59 @@
 <script setup>
 import { computed } from 'vue'
-import chapters from '../data/chapters.js'
-console.debug('chapters', chapters)
+import videos from '../data/videos.js'
+console.debug('videos', videos)
 
-const videos = [
-  {
-    id: 1,
-    duration: 31676,
-    link: 'https://www.youtube.com/embed/5hWJN4J-nyI',
-    time: 60 * 60 * 8 + 60 * 47 + 56
-  },
-  {
-    id: 2,
-    time: 60 * 60 * 9 + 60 * 3 + 42,
-    link: 'https://www.youtube.com/embed/hke9xRWiVZw'
-  },
-  {
-    id: 3,
-    time: 60 * 60 * 10 + 60 * 49 + 49,
-    link: 'https://www.youtube.com/embed/GBrh2bXrwZg'
-  },
-  {
-    id: 4,
-    time: 60 * 60 * 8 + 60 * 45 + 16,
-    link: 'https://www.youtube.com/embed/16TlrcW3eGI'
-  }
-]
-
-const random_video_index = Math.floor(Math.random() * 1) //videos.length)
+const random_video_index = Math.floor(Math.random() * videos.length)
 const random_video = videos[random_video_index]
-const random_time = Math.floor(Math.random() * random_video.duration)
+console.debug('random_video', random_video)
+const random_chapter_index = Math.floor(Math.random() * random_video.chapters.length)
+const random_chapter = random_video.chapters[random_chapter_index]
+console.debug('random_chapter', random_chapter)
+const random_section_index = Math.floor(Math.random() * random_chapter.sections.length)
+const random_section = random_chapter.sections[random_section_index]
+if (random_chapter.sections[random_section_index + 1]) {
+  const { start } = random_chapter.sections[random_section_index + 1]
+  random_section.end = start
+} else if (random_video.chapters[random_chapter_index + 1]) {
+  const { start } = random_video.chapters[random_chapter_index + 1].sections[0]
+  random_section.end = start
+} else {
+  random_section.end = random_video.duration
+}
+console.debug('random_section', random_section)
+const random_time =
+  Math.floor(Math.random() * (random_section.end - random_section.start)) + random_section.start
+console.debug('random_time', random_time)
+const sectionUri = random_section.title
+  .replace(/[^a-zA-Z\s]/g, '')
+  .replace(/ /g, '-')
+  .toLowerCase()
+console.debug('sectionUri', sectionUri)
+const sections = videos.reduce((acc, video) => {
+  return acc.concat(
+    video.chapters.reduce((_acc, chapter) => {
+      return _acc.concat(chapter.sections)
+    }, [])
+    /* {} //add an extra empty object between chapters to help get the right sectionUriNumber */
+  )
+}, [])
+const sectionUriNumber =
+  sections.reduce((acc, section, i) => {
+    if (
+      acc === null &&
+      section.id === random_section.id &&
+      section.title === random_section.title &&
+      section.start === random_section.start
+    ) {
+      return { section, i }
+    }
+    return acc
+  }, null).i + 52
+console.debug('sectionUriNumber', sectionUriNumber)
 
 function getRandomAcimYoutubeLink() {
-  return `${random_video.link}?start=${random_time}`
+  return `https://youtube.com/embed/${random_video.youtubeVideoId}?start=${random_time}`
 }
-
-const randomChapter = computed(() => {
-  const randTime = random_time
-  const chosenSection = chapters.reduce((acc, chapter, i, arr) => {
-    const { sections } = chapter
-    const _chosenSection = sections.reduce((add, section, j, ass) => {
-      if (section.start > randTime) return section
-      else return add
-    }, null)
-    if (_chosenSection !== null) {
-      chapter.section = _chosenSection
-      return chapter
-    } else return acc
-    /* console.debug('randTime', randTime, 'time.start', section.start) */
-    /* if (randTime > section.start) return _arr[j + 1] */
-    /* if (randTime < section.start) return _acc */
-    /* }, _arr[0]) */
-  }, null)
-  console.debug('chosenSection', chosenSection)
-  return chosenSection
-})
 
 function randomInteger(topNumber) {
   return Math.floor(Math.random() * topNumber) + 1
@@ -68,13 +67,18 @@ function arrayRandomItem(arr) {
 
 <template>
   <main>
-    <h3>{{ randomChapter.title }}</h3>
-    <h4>Chapter {{ randomChapter.id }}</h4>
+    <h3>{{ random_chapter.title }}</h3>
+    <h4>Chapter {{ random_chapter.id }}</h4>
     <h1>
       Section
-      {{ randomChapter.section.id }}
+      {{ random_section.id + 1 }}
     </h1>
-    <h2>{{ randomChapter.section.title }}</h2>
+    <!--<a
+      :href="`https://acim.org/acim/chapter-${random_chapter.id}/${sectionUri}/en/s/${sectionUriNumber}`"
+      target="blank"
+    >-->
+    <h2>{{ random_section.title }}</h2>
+    <!--</a>-->
     <iframe
       class="responsive-iframe"
       :src="getRandomAcimYoutubeLink()"
